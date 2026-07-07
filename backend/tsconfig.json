@@ -13,7 +13,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    // "baseUrl": ".",  อันนี้ไม่ต้องใช้แล้ว เพราะเราใช้ path mapping ใน tsconfig.json ของ root project
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
