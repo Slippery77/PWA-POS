@@ -11,12 +11,14 @@ interface loginFormState {
 }
 
 export default function LoginForm() {
+  // เก็บค่าฟอร์ม login ทั้ง 3 ช่องแบบ object เพื่อจัดการข้อมูลรวมกันง่าย
   const [formState, setFormState] = useState<loginFormState>({
     tenantCode: "",
     username: "",
     password: "",
   });
 
+  // อัปเดตค่าในฟอร์มตาม field ที่ผู้ใช้พิมพ์เข้าไป
   const handleChange = (field: keyof loginFormState, value: string) => {
     setFormState((prevState) => ({
       ...prevState,
@@ -24,9 +26,11 @@ export default function LoginForm() {
     }));
   };
 
-  const { login, isSubmitted, error} = useLogin();
+  // ดึงฟังก์ชัน login และสถานะจาก custom hook เพื่อใช้ในการส่งข้อมูลเข้าสู่ระบบ
+  const { login, isSubmitted, error } = useLogin();
 
-  const handleSubmit = async(e: React.SubmitEvent<HTMLFormElement>) => {
+  // เมื่อกด submit จะป้องกันการ refresh หน้า และเรียก login ด้วยข้อมูลจากฟอร์ม
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     await login(formState);
   };

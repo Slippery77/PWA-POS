@@ -6,7 +6,6 @@ export function useLogin(){
     const [error, setError] = useState<string | null>(null);
 
     const login = async (credentials: LoginCredentials)=>{
-        // Todo : implement login logic 
         setError(null);
         setIsSubmitted(true);
         try{
@@ -21,6 +20,8 @@ export function useLogin(){
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data: LoginResponse = await response.json();
+            // To do : store the access token and user data
+            return data;
         }catch(err){
             const message = err instanceof Error ? err.message : 'an unknown error occurred';
             setError(message);
