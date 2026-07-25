@@ -2,14 +2,14 @@ import { useState } from 'react';
 import type { LoginCredentials, LoginResponse } from '../types/auth.types';
 
 export function useLogin(){
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const login = async (credentials: LoginCredentials)=>{
         setError(null);
-        setIsSubmitted(true);
+        setIsSubmitting(true);
         try{
-            const response = await fetch('/api/auth/login',{
+            const response = await fetch('http://localhost:3000/api/auth/login',{
                 method: 'POST',
                 headers:{
                     'Content-Type': 'application/json',
@@ -17,7 +17,8 @@ export function useLogin(){
                 body: JSON.stringify(credentials),
             });
             if (!response.ok){
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.log(response.status);
+                throw new Error(`Invalid username , password or restuarant code`);
             }
             const data: LoginResponse = await response.json();
             // To do : store the access token and user data
@@ -27,13 +28,13 @@ export function useLogin(){
             setError(message);
             return null;
         }finally{
-            setIsSubmitted(false);
+            setIsSubmitting(false);
         }
     }
 
     return {
         login,
-        isSubmitted,
+        isSubmitting,
         error,
     };
 }
