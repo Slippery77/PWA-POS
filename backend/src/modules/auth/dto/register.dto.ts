@@ -3,41 +3,41 @@ import { IsString, IsNotEmpty } from 'class-validator';
 export class CreateUsers {
     @IsString()
     @IsNotEmpty()
-    restuarant_name : string;
+    restuarant_name! : string;
 
     @IsString()
     @IsNotEmpty()
-    branch_name : string;
+    branch_name! : string;
 
     @IsString()
     @IsNotEmpty()
-    tax_id : string;
+    tax_id! : string;
 
     @IsString()
     @IsNotEmpty()
-    phone : string;
+    phone! : string;
 
     @IsString()
     @IsNotEmpty()
-    email:string;
+    email!:string;
 
     @IsString()
     @IsNotEmpty()
-    address : string;
+    address! : string;
 
     @IsString()
     @IsNotEmpty()
-    username: string;
+    username!: string;
 
     @IsString()
     @IsNotEmpty()
-    password: string;
+    password!: string;
 
     @IsString()
     @IsNotEmpty()
-    roles:string;
+    roles!:string;
 
     @IsString()
     @IsNotEmpty()
-    tenant:string;
+    tenantID!:string;
 }

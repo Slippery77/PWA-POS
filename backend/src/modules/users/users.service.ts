@@ -17,4 +17,9 @@ export class UsersService {
             tenantID
         );
     }
+    // async something(){
+    //     return this.usersRepository.createRestuarant(
+
+    //     )
+    // }
 }

@@ -41,7 +41,7 @@ export class AuthService {
                 id: user.id,
                 username: user.username,
                 role: user.role_id,
-                tenantID: user.tenant_id
+                tenantID: user.tenant_id,
             }
         };
     }
