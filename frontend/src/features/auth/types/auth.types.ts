@@ -1,6 +1,6 @@
 // LoginCredentials สร้าง interface สำหรับข้อมูลการเข้าสู่ระบบของผู้ใช้
 export interface LoginCredentials {
-    'tenantCode':string;
+    'tenantID': string;
     'username': string;
     'password': string;
 }
