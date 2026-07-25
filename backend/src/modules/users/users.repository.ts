@@ -5,11 +5,12 @@ import {PG_POOL} from '../../database/database.module';
 @Injectable()
 export class UsersRepository{
     constructor(@Inject(PG_POOL) private pool : Pool){}
-    async findByUsernameAndTenantID(username:string , tenantID:string){
+    //tenantID:string
+    async findByUsernameAndTenantID(username:string , tenantID:string ){
         const sql = `SELECT users_id ,username, role_id, tenant_id 
                     FROM users 
                     where username = $1 AND tenant_id = $2;`
-        const result = await this.pool.query(sql,[username, tenantID]);
+        const result = await this.pool.query(sql,[username,tenantID]);
         return result.rows[0]??null; 
     }
     // function ใส่ข้อมูลเข้าไปในตาราง tenants
