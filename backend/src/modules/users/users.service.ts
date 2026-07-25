@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { UsersRepository } from './users.repository';
 
 export type User = any;
 
 @Injectable()
 export class UsersService {
-    private readonly users = [
-        {
-            username:'TestUser',
-            password:'TestPassword',
-        }
-    ];
-    async findOne(username: string): Promise<User | undefined>{
-        return this.users.find(user => user.username === username);
+    constructor(
+        private readonly usersRepository : UsersRepository 
+    ){}
+    async findByUsernameAndTenantID(
+        username: string,
+        tenantID: string
+    ){
+        return this.usersRepository.findByUsernameAndTenantID(
+            username,
+            tenantID
+        );
     }
 }
