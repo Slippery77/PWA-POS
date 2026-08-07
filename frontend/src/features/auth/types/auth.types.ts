@@ -1,6 +1,6 @@
 // LoginCredentials สร้าง interface สำหรับข้อมูลการเข้าสู่ระบบของผู้ใช้
 export interface LoginCredentials {
-    'tenantID': string;
+    'tenantSlug': string;
     'username': string;
     'password': string;
 }
@@ -10,7 +10,7 @@ export interface AuthUser {
     'id':string;
     'username':string;
     'role':string;
-    'tenantId':string;
+    'tenantSlug':string;
 }
 
 // LoginResponse สร้าง interface สำหรับข้อมูลการตอบกลับ(Backend)หลังจากเข้าสู่ระบบสำเร็จ

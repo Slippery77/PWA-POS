@@ -1,0 +1,36 @@
+### สิ่งที่ JwtAuthGuard ต้องทำจริงๆ (สรุปเป็นขั้นตอน) ###
+1.ดึง Authorization header จาก request (รูปแบบมาตรฐานคือ Authorization: Bearer <token>)
+2.เช็คว่ามี header นี้ไหม — ถ้าไม่มีเลย ปฏิเสธทันที (401)
+3.แยกเอา token ออกมาจาก Bearer <token>
+4.ใช้ JwtService (ตัวเดียวกับที่ AuthService ใช้สร้าง token) decode/verify ว่า token นี้ valid ไหม (ไม่ถูกปลอม, ยังไม่หมดอายุ)
+5.ถ้า valid → แนบข้อมูล user ที่ decode ได้เข้าไปกับ request object แล้วอนุญาตให้ผ่าน (return true)
+6.ถ้าไม่ valid (token ปลอม, หมดอายุ, ไม่มี header) → throw UnauthorizedException
+
+อธิบาย JwtAuthGuard
+implements CanActivate
+บอก TypeScript ว่า class นี้ต้องทำตาม "สัญญา" ของ CanActivate interface — บังคับว่าต้องมี method ชื่อ canActivate() อยู่ในนี้เสมอ (ชื่อ method ตายตัว NestJS จะเรียกชื่อนี้เท่านั้นตอนทำงานจริง)
+
+canActivate(context: ExecutionContext): Promise<boolean>
+    ExecutionContext — object พิเศษที่ NestJS ส่งเข้ามาให้ มีข้อมูลเกี่ยวกับ request ปัจจุบันทั้งหมด (คล้าย request/response ที่เคยเห็นใน Controller แต่ห่อเป็นรูปแบบทั่วไปกว่า เพราะ Guard ใช้ได้กับหลาย protocol ไม่ใช่แค่ HTTP)
+    Promise<boolean> — ต้อง return true/false (หรือ throw exception) เสมอ — true = อนุญาตให้ผ่านไป Controller
+
+context.switchToHttp().getRequest()
+แปลง ExecutionContext (แบบทั่วไป) ให้กลายเป็น HTTP request object ปกติที่คุ้นเคย (เหมือน @Req() ใน Controller)
+
+extractTokenFromHeader(request)
+ฟังก์ชันย่อยที่แยกเอา token ออกมาจาก header Authorization: Bearer eyJhbGci... — ใช้ .split(' ') แยกคำว่า "Bearer" กับตัว token ออกจากกัน (คั่นด้วย space) ถ้า format ไม่ตรง (เช่น ไม่มี header เลย, หรือไม่ได้ขึ้นต้นด้วย Bearer) จะคืน undefined
+
+await this.jwtService.verifyAsync(token)
+นี่คือหัวใจของ Guard — เรียก method นี้เพื่อเช็คว่า token valid ไหม (ลายเซ็นถูกไหม + ยังไม่หมดอายุ) ถ้าผ่านจะได้ payload กลับมา (ข้อมูลเดียวกับที่เคยฝังไว้ตอน login: sub, username, tenantID, role)
+
+request.user = payload;
+จุดที่ตอบคำถามที่คุยกันไปเมื่อกี้ — แนบ payload ที่ decode ได้เข้าไปเป็น property ใหม่ชื่อ user บน request object ทำให้ Controller ใดๆ ที่ทำงานหลังจากนี้ (ผ่าน @Req()) เข้าถึง request.user.sub, request.user.role ได้ทันที
+
+try/catch รอบ verifyAsync
+ถ้า token หมดอายุ หรือถูกปลอม (ลายเซ็นไม่ตรง) verifyAsync จะ throw error ของมันเอง — เราจับไว้แล้วแปลงเป็น UnauthorizedException ที่มีข้อความสื่อความหมายชัดเจนกว่า
+
+
+JwtAuthGuard → "นี่คือใคร (decode JWT) แล้วแนบไว้ให้ทุกคนใช้ต่อ"
+                        │
+                        ▼
+RolesGuard    → "อ่านว่าคนนี้มี role อะไร (จากที่แนบไว้) แล้วเทียบว่ามีสิทธิ์เข้า endpoint นี้ไหม"

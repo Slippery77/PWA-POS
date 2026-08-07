@@ -1,11 +1,11 @@
-import LoginPage from './features/auth/pages/login_pages'
-//import './App.css'
+import { AppRouter }from './routes/AppRouter.tsx';
+import './App.css'
 
 function App() {
 
   return (
     <>
-      <LoginPage />
+      <AppRouter />
     </>
   )
 }
