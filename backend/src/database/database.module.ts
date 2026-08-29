@@ -3,8 +3,9 @@ import { Pool } from 'pg';
 
 export const PG_POOL = 'PG_POOL';
 
-@Global()
+@Global() // decorator ที่ให้คนอื่นสามารถเรียกไปใช้ได้เลยไม่ต้อง import 
 @Module({
+    // 
     providers: [
         {
             provide: 'PG_POOL',
