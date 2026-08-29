@@ -11,7 +11,7 @@ export class TenantsRepository{
         tenant_slug:string,
         phone:string,
         house_number:string,
-        village:string,
+        moo:string,
         soi:string,
         road:string,
         subdistrict:string,
@@ -20,11 +20,11 @@ export class TenantsRepository{
         postal_code:string
     ){
         const sql = `INSERT INTO tenants (
-        restaurant_name, tenant_slug , phone , house_number, village, soi, road, subdistrict, district, province, postal_code)
+        restaurant_name, tenant_slug , phone , house_number, moo, soi, road, subdistrict, district, province, postal_code)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING tenant_id;
         `
-        const result = await client.query(sql,[restaurant_name,tenant_slug,phone,house_number,village,soi,road,subdistrict,district,province,postal_code]);
+        const result = await client.query(sql,[restaurant_name,tenant_slug,phone,house_number,moo,soi,road,subdistrict,district,province,postal_code]);
         return  result.rows[0];
     }
     

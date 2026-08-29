@@ -5,12 +5,12 @@ export interface RegisterOwner{
     confirmPassword : string;
 } 
 
-export interface RegisterRestuarant{
+export interface RegisterRestaurant{
     restaurant_name : string;
     tenant_slug : string;
     phone : string;
     house_number : string;
-    village : string;
+    moo : string;
     soi : string;
     road : string;
     subdistrict : string;
@@ -19,7 +19,4 @@ export interface RegisterRestuarant{
     postal_code : string;
 }
 
-export interface registerRequest{
-    tenant: RegisterRestuarant;
-    owner: RegisterOwner;
-}
+export type registerRequest = RegisterRestaurant & Omit<RegisterOwner, "confirmPassword">;

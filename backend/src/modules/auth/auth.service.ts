@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from '../auth/dto/login.dto';
@@ -35,7 +35,6 @@ export class AuthService {
 
         // สร้าง payload สำหรับ JWT โดยใส่ข้อมูลสำคัญของผู้ใช้
         const payLoad = { sub: users.users_id, username: users.username, tenantID: users.tenant_id, role: role.role_name };
-        console.log(payLoad);
 
         // สร้าง access token จาก payload ที่เตรียมไว้
         const accessToken = await this.jwtService.signAsync(payLoad);

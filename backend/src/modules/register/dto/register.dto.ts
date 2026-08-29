@@ -19,7 +19,7 @@ export class RegisterOwnerDto {
 
     @IsString()
     @IsOptional()
-    village!:string
+    moo!:string
 
     @IsString()
     @IsOptional()

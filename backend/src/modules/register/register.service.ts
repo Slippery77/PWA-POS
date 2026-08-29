@@ -50,7 +50,7 @@ export class RegisterService {
                 dto.tenant_slug,
                 dto.phone,
                 dto.house_number,
-                dto.village,
+                dto.moo,
                 dto.soi,
                 dto.road,
                 dto.subdistrict,
