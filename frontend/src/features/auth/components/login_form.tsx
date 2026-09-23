@@ -36,7 +36,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" style={{ backgroundColor: "red" }}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="tenantCode">Tenant Code</label>
