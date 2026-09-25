@@ -11,8 +11,8 @@ export interface Menu {
     type: string
 }
 
-export interface CartMenu {
-    menu: Menu
+export interface CartMenu extends Menu {
+    quantity: number,
 }
 
 export default function MainPOS() {
@@ -63,6 +63,24 @@ export default function MainPOS() {
 
     const filteredMenu = menu.filter((m) => m.type === seletedCategory)
 
+    function onAddToCart(menu: Menu) {
+        setcartMenu((prev) => {
+            const isExist = prev.find((item) => item.id === menu.id)
+            if (isExist) {
+                return prev.map((item) =>
+                    item.id === menu.id ? { ...item, quantity: item.quantity + 1 } : item)
+            }
+            return [...prev,
+            {
+                ...menu,
+                quantity: 1
+            }
+            ]
+        })
+
+        setOrder(true)
+    }
+
     return (
         <>
             <Header />
@@ -77,7 +95,7 @@ export default function MainPOS() {
                     </div>
                     <div className="flex overflow-y-auto p-6 grid grid-cols-4 gap-4">
                         {filteredMenu.map((m) => (
-                            <MenuCard key={m.id} name={m.name} price={m.price} />
+                            <MenuCard key={m.id} menu={m} onClickMenuCard={onAddToCart} />
                         ))}
                     </div>
                 </main>
