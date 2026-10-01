@@ -1,13 +1,14 @@
-import { type CartMenu, type Menu } from "../pages/MainPOS"
+import { type CartMenu } from "../pages/MainPOS"
 import { UtensilsCrossed, SendHorizontal, Trash2, Minus, Plus } from "lucide-react"
 
 interface PropsOrderSidebar {
     cartMenu: CartMenu[]
     isOrdered: boolean
-    onDeleteFromCart?: (menu: Menu) => void
-    onDeleteFormCart?: (menu: Menu) => void
-    onReduceValue?: (menu: Menu) => void
-    onIncreaseValue?: (menu: Menu) => void
+    onDeleteFromCart?: (item: CartMenu) => void
+    onDeleteFormCart?: (item: CartMenu) => void
+    onReduceValue?: (item: CartMenu) => void
+    onIncreaseValue?: (item: CartMenu) => void
+    onSendToKitchen?: () => void
 }
 
 export default function OrderSidebar(props: PropsOrderSidebar) {
@@ -52,19 +53,47 @@ export default function OrderSidebar(props: PropsOrderSidebar) {
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2.5">
                     {props.cartMenu.map((item) => (
                         <div
-                            key={item.id}
-                            className="bg-white/90 border border-stone-200/80 rounded-xl p-3 flex items-center justify-between shadow-2xs hover:bg-white hover:border-stone-300 transition-all group"
+                            key={item.cartItemId || item.id}
+                            className="bg-white/90 border border-stone-200/80 rounded-xl p-3 flex flex-col gap-2 shadow-2xs hover:bg-white hover:border-stone-300 transition-all group"
                         >
-                            <div className="flex-1 min-w-0 pr-2">
-                                <h3 className="text-[#2D241E] font-medium text-sm truncate">
-                                    {item.name}
-                                </h3>
-                                <p className="text-xs text-stone-400 mt-0.5">
-                                    ฿{item.price} / รายการ
-                                </p>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0 pr-2">
+                                    <h3 className="text-[#2D241E] font-medium text-sm">
+                                        {item.name}
+                                    </h3>
+                                    <p className="text-xs text-[#A68874] font-medium mt-0.5">
+                                        ฿{item.price} / รายการ
+                                    </p>
+
+                                    {/* แสดงรายละเอียดตัวเลือก modifier */}
+                                    {item.selectedSpiciness && (
+                                        <p className="text-[11px] text-stone-500 mt-1">
+                                            • {item.selectedSpiciness}
+                                        </p>
+                                    )}
+                                    {item.selectedAddons && item.selectedAddons.length > 0 && (
+                                        <p className="text-[11px] text-stone-500">
+                                            • {item.selectedAddons.map((a) => `${a.name} (+฿${a.price})`).join(", ")}
+                                        </p>
+                                    )}
+                                    {item.note && (
+                                        <p className="text-[11px] text-stone-400 italic">
+                                            • หมายเหตุ: {item.note}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleDelete(item)}
+                                    className="p-1 rounded-lg text-stone-400 hover:text-rose-500 hover:bg-rose-50 active:scale-90 transition-all cursor-pointer"
+                                    title={`ลบ ${item.name}`}
+                                >
+                                    <Trash2 className="w-4 h-4 stroke-[1.75]" />
+                                </button>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between border-t border-stone-100 pt-2 mt-0.5">
                                 <div className="flex items-center bg-[#FAF7F2] border border-stone-200/80 rounded-lg p-0.5">
                                     <button
                                         type="button"
@@ -87,17 +116,9 @@ export default function OrderSidebar(props: PropsOrderSidebar) {
                                     </button>
                                 </div>
 
-                                <span className="font-semibold text-[#2D241E] text-sm min-w-12 text-right">
+                                <span className="font-semibold text-[#2D241E] text-sm">
                                     ฿{(item.price * item.quantity).toLocaleString()}
                                 </span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleDelete(item)}
-                                    className="p-1.5 rounded-lg text-stone-400 hover:text-rose-500 hover:bg-rose-50 active:scale-90 transition-all cursor-pointer"
-                                    title={`ลบ ${item.name}`}
-                                >
-                                    <Trash2 className="w-4 h-4 stroke-[1.75]" />
-                                </button>
                             </div>
                         </div>
                     ))}
@@ -122,6 +143,7 @@ export default function OrderSidebar(props: PropsOrderSidebar) {
                 <div className="flex flex-col gap-2.5">
                     <button
                         type="button"
+                        onClick={props.onSendToKitchen}
                         className="w-full py-2.5 px-4 rounded-full border border-[#AA8971] text-[#8C6D58] font-medium text-sm hover:bg-[#EFE8DD]/50 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={props.cartMenu.length === 0}
                     >

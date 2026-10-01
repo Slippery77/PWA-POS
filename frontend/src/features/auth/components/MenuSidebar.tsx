@@ -14,7 +14,7 @@ interface MenuSidebarProps {
     onSelectCategory: (categoryTitle: string) => void;
 }
 export default function MenuSidebar(props: MenuSidebarProps) {
-    const [category, setCategory] = useState<Category[]>([
+    const [category] = useState<Category[]>([
         { id: 1, title: 'อาหารจานหลัก', icon: <UtensilsCrossed /> },
         { id: 2, title: 'ของทานเล่น', icon: <Croissant /> },
         { id: 3, title: 'เครื่องดื่ม', icon: <CupSoda /> },
