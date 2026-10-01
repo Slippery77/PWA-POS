@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from '../auth/dto/login.dto';
-import { LoginEmailDto } from './dto/login-with-email.dto';
 import { RolesService } from '../roles/roles.service';
 import { UsersService } from '../users/users.service';
 
@@ -23,6 +22,10 @@ export class AuthService {
         // ถ้าไม่พบผู้ใช้ ให้ยกเลิกคำขอและส่ง error 401 Unauthorized
         if (!users) {
             throw new UnauthorizedException('Invalid Credentials');
+        }
+
+        if (!users.is_active){
+            throw new UnauthorizedException('Account is deactivated');
         }
 
         // ตรวจสอบว่ารหัสผ่านที่ผู้ใช้ใส่ตรงกับรหัสผ่านที่เก็บไว้ในฐานข้อมูลหรือไม่

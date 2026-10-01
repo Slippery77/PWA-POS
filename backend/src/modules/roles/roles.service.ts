@@ -11,4 +11,8 @@ export class RolesService{
     async findRoleByID(role_id:string){
         return this.rolesRepository.findRoleByID(role_id);
     }
+
+    async listPermission(){
+        return this.rolesRepository.listPermission();
+    }
 }
