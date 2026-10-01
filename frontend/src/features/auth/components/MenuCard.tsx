@@ -1,4 +1,3 @@
-import { type CartMenu } from "../pages/MainPOS"
 import { type Menu } from "../pages/MainPOS"
 
 interface MenuCardProps {
