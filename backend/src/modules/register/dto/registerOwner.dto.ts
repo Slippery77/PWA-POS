@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional} from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsOptional, MaxLength} from 'class-validator';
 
 export class RegisterOwnerDto {
     @IsString()
@@ -56,4 +56,9 @@ export class RegisterOwnerDto {
     @IsString()
     @IsNotEmpty()
     password! : string;
+
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(100)
+    display_name!:string;
 }

@@ -1,4 +1,4 @@
-import { RegisterOwnerDto } from './dto/register.dto';
+import { RegisterOwnerDto } from './dto/registerOwner.dto';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RolesService } from '../roles/roles.service';
@@ -17,7 +17,7 @@ export class RegisterService {
         private readonly pool: Pool,
     ) {}
 
-    async registration(dto: RegisterOwnerDto) {
+    async registrationOwner(dto: RegisterOwnerDto) {
         // ตรวจสอบว่า tenant slug นี้ถูกใช้ไปแล้วหรือยัง
         const tenantSlugExisted = await this.tenantsService.findTenantSlug(dto.tenant_slug);
         if (tenantSlugExisted) {
@@ -66,10 +66,19 @@ export class RegisterService {
                 dto.username,
                 dto.email,
                 hash_password,
+                dto.display_name
             );
 
             await client.query('COMMIT');
-            return { message: 'Register Successfully!' };
+            return { 
+                message: 'Register Successfully!' ,
+                tenant_id: tenant.tenant_id,
+                tenant_slug: dto.tenant_slug,
+                tenant_name: dto.restaurant_name,
+                display_name: dto.display_name,
+                username: dto.username,
+
+            };
         } catch (err) {
             // ถ้าสomething ผิดพลาดให้ rollback เพื่อไม่ให้ข้อมูลกึ่งสำเร็จค้างอยู่
             await client.query('ROLLBACK');

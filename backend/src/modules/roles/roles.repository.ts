@@ -1,6 +1,6 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { Pool } from 'pg';
-import { PG_POOL } from '../../database/database.module';
+import { PG_POOL } from "../../database/database.module";
 
 @Injectable()
 export class RolesRepository{
@@ -22,5 +22,16 @@ export class RolesRepository{
         `
         const result = await this.pool.query(sql,[role_id]);
         return result.rows[0]??null;
+    }
+
+    async listPermission(){
+        const sql = `
+            SELECT r.role_name ,p.permission_key
+            FROM role_permissions rp 
+            JOIN roles r on rp.role_id = r.role_id
+            JOIN permissions p on rp.permission_id = p.permission_id;
+        `;
+        const result = await this.pool.query(sql)
+        return result.rows;
     }
 }
