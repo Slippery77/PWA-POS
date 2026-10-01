@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import type { KDSOrder, KDSStatus } from "../types/kds.types"
 import { Clock, Trash2, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react"
 
-interface KDSCardProps {
+export interface KDSCardProps {
     order: KDSOrder
     onUpdateStatus: (orderId: string, nextStatus: KDSStatus) => void
     onCancelOrder: (orderId: string) => void
