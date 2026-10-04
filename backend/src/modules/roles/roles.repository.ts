@@ -1,17 +1,17 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { Pool } from 'pg';
-import { PG_POOL } from "../../database/database.module";
+import { DbContextService } from "../../database/db-context.service";
 
 @Injectable()
 export class RolesRepository{
-    constructor(@Inject(PG_POOL) private pool:Pool){}
+    constructor(private readonly db: DbContextService){}
     async findRoleByName(role_name:string){
         const sql = `
                 SELECT role_id 
                 FROM roles
                 WHERE role_name = $1;
-        `
-        const result = await this.pool.query(sql,[role_name]);
+        `;
+        const result = await this.db.referenceQuery(sql,[role_name]);
         return result.rows[0]??null;
     }
     async findRoleByID(role_id : string){
@@ -19,8 +19,8 @@ export class RolesRepository{
                 SELECT role_name
                 FROM roles
                 WHERE role_id = $1;
-        `
-        const result = await this.pool.query(sql,[role_id]);
+        `;
+        const result = await this.db.referenceQuery(sql,[role_id]);
         return result.rows[0]??null;
     }
 
@@ -31,7 +31,7 @@ export class RolesRepository{
             JOIN roles r on rp.role_id = r.role_id
             JOIN permissions p on rp.permission_id = p.permission_id;
         `;
-        const result = await this.pool.query(sql)
+        const result = await this.db.referenceQuery(sql);
         return result.rows;
     }
 }

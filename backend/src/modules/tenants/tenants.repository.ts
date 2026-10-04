@@ -1,12 +1,11 @@
-import { Injectable ,  Inject} from '@nestjs/common';
-import {Pool, PoolClient} from 'pg';
-import { PG_POOL } from '../../database/database.module';
+import { Injectable } from '@nestjs/common';
+import { DbContextService } from '../../database/db-context.service';
 
 @Injectable()
 export class TenantsRepository{
-    constructor(@Inject(PG_POOL) private pool : Pool){}
+    constructor(private readonly db: DbContextService){}
     async createTenant(
-        client: PoolClient,
+        tenant_id:string,
         restaurant_name:string,
         tenant_slug:string,
         phone:string,
@@ -20,17 +19,21 @@ export class TenantsRepository{
         postal_code:string
     ){
         const sql = `INSERT INTO tenants (
-        restaurant_name, tenant_slug , phone , house_number, moo, soi, road, subdistrict, district, province, postal_code)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        tenant_id, restaurant_name, tenant_slug , phone , house_number, moo, soi, road, subdistrict, district, province, postal_code)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING tenant_id;
         `
-        const result = await client.query(sql,[restaurant_name,tenant_slug,phone,house_number,moo,soi,road,subdistrict,district,province,postal_code]);
+        const result = await this.db.query(sql,[tenant_id, restaurant_name, tenant_slug, phone, house_number, moo, soi, road, subdistrict, district, province, postal_code]);
         return  result.rows[0];
     }
     
    async findTenantSlug(tenant_slug:string){
-        const sql = `SELECT tenant_id from tenants where tenant_slug =$1;`
-        const result = await this.pool.query(sql,[tenant_slug]);
+        // resolve_tenant เป็น SECURITY DEFINER จึงข้าม RLS ได้
+        // ใช้ referenceQuery เพราะตอน login ยังไม่มี context
+        const sql = `SELECT tenant_id, is_active FROM resolve_tenant($1)`;    
+    
+        //const sql = `SELECT tenant_id from tenants where tenant_slug =$1;`
+        const result = await this.db.referenceQuery(sql,[tenant_slug]);
         return result.rows[0]
    }
 }

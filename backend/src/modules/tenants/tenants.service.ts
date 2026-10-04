@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { TenantsRepository } from './tenants.repository';
-import { PoolClient } from 'pg';
 
 @Injectable()
 export class TenantsService {
@@ -8,7 +7,7 @@ export class TenantsService {
         private readonly tenantsRepository : TenantsRepository 
     ){}
     async createTenant (
-        client:PoolClient,
+        tenant_id:string,
         restaurant_name:string, 
         tenant_slug:string,
         phone:string,
@@ -22,7 +21,7 @@ export class TenantsService {
         postal_code:string
     ){
         return this.tenantsRepository.createTenant(
-            client,
+            tenant_id,
             restaurant_name,
             tenant_slug,
             phone,

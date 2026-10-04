@@ -1,10 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
-import { PG_POOL } from '../../database/database.module';
+import { DbContextService } from '../../database/db-context.service';
 
 @Injectable()
 export class MenuRepository{
-    constructor( @Inject(PG_POOL) private readonly pool: Pool){}
+    constructor( private readonly db: DbContextService){}
     
     async createCategory(tenant_id:string,name:string){
         const sql = `
@@ -15,7 +15,7 @@ export class MenuRepository{
             )
             RETURNING *;
         `;
-        const result = await this.pool.query(sql,[tenant_id,name]);
+        const result = await this.db.query(sql,[tenant_id,name]);
         return result.rows[0];
     }
 
@@ -23,7 +23,7 @@ export class MenuRepository{
         const sql = `
             INSERT INTO menu_items(name,description,price,is_available,is_active)
         `;
-        const result = await this.pool.query(sql);
+        const result = await this.db.query(sql);
         return result.rows;
     }
 
@@ -33,7 +33,7 @@ export class MenuRepository{
             FROM categories
             WHERE tenant_id = $1 AND name = $2;
         `;
-        const result = await this.pool.query(sql,[tenant_id,name]);
+        const result = await this.db.query(sql,[tenant_id,name]);
         return result.rows[0]??null;
     }
 
@@ -44,7 +44,7 @@ export class MenuRepository{
             WHERE tenant_id = $1 AND name = $2
             RETURNING *;
         `;
-        const result = await this.pool.query(sql,[tenant_id,name]);
+        const result = await this.db.query(sql,[tenant_id,name]);
         return result.rows[0]??null;
     }
 
@@ -55,7 +55,7 @@ export class MenuRepository{
             where tenant_id = $1 and name = $2
             RETURNING *;
         `;
-        const result = await this.pool.query(sql,[tenant_id,name]);
+        const result = await this.db.query(sql,[tenant_id,name]);
         return result.rows[0]??null;
     }
 }

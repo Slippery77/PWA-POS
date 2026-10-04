@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginEmailDto } from './dto/login-with-email.dto';
 import { Public } from './guards/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 // Controller สำหรับจัดการ endpoint ที่เกี่ยวกับการยืนยันตัวตนของผู้ใช้
 @Controller('auth')
@@ -14,6 +15,7 @@ export class AuthController {
   
     @HttpCode(HttpStatus.OK)
     // Route สำหรับการเข้าสู่ระบบที่อยู่ที่ /auth/login
+    @Throttle({default:{ttl:60000, limit:5}})
     @Public()
     @Post('login')
     async login(@Body() dto: LoginDto) {

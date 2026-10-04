@@ -1,6 +1,5 @@
 import { Injectable , ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
-import { PoolClient } from 'pg';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
@@ -11,18 +10,14 @@ export class UsersService {
         private readonly usersRepository : UsersRepository ,
         private readonly rolesService : RolesService
     ){}
-    // async findByUsernameAndTenantID(
-    //     username: string,
-    //     tenantID: string
-    // ){
-    //     return this.usersRepository.findByUsernameAndTenantID(
-    //         username,
-    //         tenantID
-    //     );
-    // }
+
+    async findUsernameAndTenantID(
+        tenantID: string,
+        username: string,
+       
+    ){return this.usersRepository.findUsernameAndTenantID(tenantID,username);}
 
     async createOwner(
-        client:PoolClient,
         tenant_id:string,
         role_id:string,
         username:string,
@@ -31,7 +26,6 @@ export class UsersService {
         display_name:string
     ){
         return this.usersRepository.createOwner(
-            client,
             tenant_id,
             role_id,
             username,
@@ -47,12 +41,6 @@ export class UsersService {
         return this.usersRepository.findEmail(email);
     }
 
-    async findByUsernameAndTenantSlug(
-        username: string,
-        tenantSlug: string
-    ){
-        return this.usersRepository.findByUsernameAndTenantSlug(username, tenantSlug);
-    }
 
     async createUser(tenantID:string, dto:CreateUserDTO){ 
         try{

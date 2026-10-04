@@ -8,12 +8,14 @@ import { PermissionCacheService } from './permission-cache.service';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwtAuth.guard';
+import { TenantsModule} from '../tenants/tenants.module';
 
 @Global()
 @Module({
     imports: [
         UsersModule,
         RolesModule,
+        TenantsModule,
         JwtModule.registerAsync({
             global:true,
             useFactory: () => ({

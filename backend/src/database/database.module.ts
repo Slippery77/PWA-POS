@@ -1,12 +1,11 @@
 import { Module, Global, OnApplicationShutdown, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
-
-export const PG_POOL = 'PG_POOL';
+import { DbContextService } from './db-context.service';
+import { PG_POOL } from './database.constants';
 
 @Global()
 @Module({
-    providers: [
-        {
+    providers: [{
             provide: PG_POOL,
             useFactory: () => {
                 const requiredEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
@@ -35,8 +34,9 @@ export const PG_POOL = 'PG_POOL';
                 return pool;
             },
         },
+        DbContextService,
     ],
-    exports: [PG_POOL],
+    exports: [PG_POOL, DbContextService],
 })
 export class DatabaseModule implements OnApplicationShutdown {
     constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
