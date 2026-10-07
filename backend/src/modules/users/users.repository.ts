@@ -1,35 +1,52 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { Pool } from 'pg';
-import { PG_POOL } from '../../database/database.module';
-import { User } from './entities/user.entity';
+import { Injectable } from '@nestjs/common';
+import { DbContextService } from '../../database/db-context.service';
 
 @Injectable()
 export class UsersRepository {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+    constructor(private readonly db: DbContextService) {}
 
-  async findbyUsernameAndTenantCode(
-    username: string,
-    tenantCode: string,
-  ): Promise<User | null> {
-    const query = `
-            SELECT 
-                u.users_id AS id,
-                u.username,
-                u.password_hash AS "passwordHash",
-                u.is_active AS "isActive",
-                r.role_name AS role,
-                t.tenant_id::text AS "tenantCode"
-            FROM users u
-            JOIN roles r ON u.role_id = r.role_id
-            JOIN tenants t ON u.tenant_id = t.tenant_id
-            WHERE u.username = $1 
-              AND (t.tenant_id::text = $2 OR t.restaurant_name = $2)
-            LIMIT 1;
+    async createOwner(
+        tenant_id: string,
+        role_id: string,
+        username: string,
+        email: string,
+        password: string,
+        display_name: string
+    ) {
+        const sql = `INSERT INTO users (tenant_id, role_id, username, email, password_hash, display_name)
+                    VALUES ($1,$2,$3,$4,$5,$6)
+                    RETURNING users_id, username, display_name;
         `;
-    const result = await this.pool.query(query, [username, tenantCode]);
-    if (result.rows.length === 0) {
-      return null;
+        const result = await this.db.query(sql, [tenant_id, role_id, username, email, password, display_name]);
+        return result.rows[0];
     }
-    return result.rows[0] as User;
-  }
+
+    async findEmail(email: string) {
+        const sql = `
+            SELECT users_id, tenant_id 
+            FROM resolve_user_by_email($1);
+        `;
+        const result = await this.db.referenceQuery(sql, [email]);
+        return result.rows[0] ?? null;
+    }
+
+    async findUsernameAndTenantID(tenantID: string, username: string) {
+        const sql = `
+            SELECT u.users_id, u.role_id, u.tenant_id, u.username, u.password_hash, u.is_active
+            FROM users u
+            WHERE tenant_id = $1 AND lower(username) = lower($2);
+        `;
+        const result = await this.db.query(sql, [tenantID, username]);
+        return result.rows[0] ?? null;
+    }
+
+    async createUser(tenantID: string, roleID: string, username: string, password: string, pin?: string | null, displayName?: string) {
+        const sql = `
+            INSERT INTO users(tenant_id, role_id, username, password_hash, pin_hash, display_name) 
+            VALUES($1,$2,$3,$4,$5,$6)
+            RETURNING *;
+        `;
+        const result = await this.db.query(sql, [tenantID, roleID, username, password, pin, displayName]);
+        return result.rows[0];
+    }
 }

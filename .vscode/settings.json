@@ -8,5 +8,6 @@
   "editor.suggestOnTriggerCharacters": true,
   "editor.wordBasedSuggestions": "allDocuments",
   "editor.parameterHints.enabled": true,
-  "editor.suggest.snippetsSupport": true
+  "editor.suggest.snippetsSupport": true,
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }

@@ -1,10 +1,51 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './database/database.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { RegistersModule } from './modules/register/register.module';
+import { MenuModule } from './modules/menu/menu.module';
+import { TenantContextInterceptor } from './common/interceptors/tenant-context.interceptor';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule , ThrottlerGuard} from '@nestjs/throttler';
+import * as Joi from 'joi';
 
 @Module({
-  imports: [],
+  imports: [ 
+    ConfigModule.forRoot({
+    isGlobal: true,
+    cache: true,
+    validationSchema: Joi.object({
+        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        PORT: Joi.number().default(3000),
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.number().default(5432),
+        DB_USER: Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_NAME: Joi.string().required(),
+        DB_SSL: Joi.boolean().default(false),
+        JWT_SECRET: Joi.string().min(32).required(),
+        JWT_EXPIRES_IN: Joi.string().default('1d'),
+        CORS_ORIGIN: Joi.string().required(),
+      }),
+  }),
+    DatabaseModule,
+    AuthModule,
+    UsersModule,
+    RegistersModule,
+    MenuModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {provide: APP_GUARD, useClass:ThrottlerGuard },
+    {provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor,},
+  ],
 })
 export class AppModule {}

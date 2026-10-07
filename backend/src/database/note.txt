@@ -1,0 +1,19 @@
+export const PG_POOL = 'PG_POOL';
+NestJS ต้องมี "ชื่อเรียก" (token) สำหรับแต่ละ provider ที่จะ inject ได้ ปกติถ้าเป็น class (เช่น UsersService) 
+NestJS ใช้ชื่อ class เป็น token ให้อัตโนมัติ แต่ Pool เป็น class จาก library ภายนอกที่เราไม่ได้เขียนเอง 
+เลยต้องสร้าง string token ขึ้นมาเองแทน เพื่อให้ทุกที่ในแอปอ้างอิง Pool ตัวเดียวกันได้ผ่านชื่อนี้
+
+@Global()
+บอกว่า provider ในนี้ (PG_POOL) จะถูกมองเห็นได้จากทุก module ในแอปทันที ไม่ต้อง import DatabaseModule ซ้ำๆ 
+ในทุกโมดูลที่ต้องใช้ database — เหมาะกับของที่ใช้ร่วมกันทั้งระบบแบบนี้
+
+useFactory: () => { return new Pool({...}) }
+ปกติ NestJS จะสร้าง instance ให้เราแบบตรงๆ (new SomeClass()) แต่ Pool ต้องการ config 
+พิเศษตอนสร้าง (host, port, user, password) เราเลยใช้ factory function คือฟังก์ชันที่เราเขียนเองว่า "จะสร้างของนี้ยังไง" แทน
+
+host: process.env.DB_HOST เป็นต้น
+ดึงค่าจากไฟล์ .env ที่ตั้งไว้ก่อนหน้า — Number(process.env.DB_PORT) 
+ต้องแปลงเป็นตัวเลขเพราะ process.env ให้ค่าทุกตัวเป็น string เสมอ ทั้งที่ Pool ต้องการ port เป็น number
+
+exports: [PG_POOL]
+ทำให้ module อื่นที่ import DatabaseModule (ถ้าไม่ใช้ @Global ก็ต้อง export/import กันแบบนี้) เอา PG_POOL ไปใช้ต่อได้
