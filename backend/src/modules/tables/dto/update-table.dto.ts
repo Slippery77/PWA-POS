@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsIn } from 'class-validator';
 
 export class UpdateTableDto {
   @IsString()
@@ -14,4 +14,5 @@ export class UpdateTableDto {
   @Min(1)
   @IsOptional()
   floor?: number;
+
 }

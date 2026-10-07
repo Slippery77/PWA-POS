@@ -13,7 +13,7 @@ import { UpdateTableDto } from './dto/update-table.dto';
 
 @Controller('tables')
 export class TablesController {
-  constructor(private readonly tablesService: TablesService) {}
+  constructor(private readonly tablesService: TablesService) { }
 
   /**
    * POST /tables
@@ -33,6 +33,11 @@ export class TablesController {
   async findAll() {
     // TODO: เรียกใช้ tablesService.findAll
     return this.tablesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.tablesService.findOne(id);
   }
 
   /**

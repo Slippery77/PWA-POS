@@ -9,15 +9,16 @@ import { RegistersModule } from './modules/register/register.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { TenantContextInterceptor } from './common/interceptors/tenant-context.interceptor';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule , ThrottlerGuard} from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { TablesModule } from './modules/tables/tables.module';
 import * as Joi from 'joi';
 
 @Module({
-  imports: [ 
+  imports: [
     ConfigModule.forRoot({
-    isGlobal: true,
-    cache: true,
-    validationSchema: Joi.object({
+      isGlobal: true,
+      cache: true,
+      validationSchema: Joi.object({
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         PORT: Joi.number().default(3000),
         DB_HOST: Joi.string().required(),
@@ -30,12 +31,13 @@ import * as Joi from 'joi';
         JWT_EXPIRES_IN: Joi.string().default('1d'),
         CORS_ORIGIN: Joi.string().required(),
       }),
-  }),
+    }),
     DatabaseModule,
     AuthModule,
     UsersModule,
     RegistersModule,
     MenuModule,
+    TablesModule,
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 100,
@@ -44,8 +46,8 @@ import * as Joi from 'joi';
   controllers: [AppController],
   providers: [
     AppService,
-    {provide: APP_GUARD, useClass:ThrottlerGuard },
-    {provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor,},
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor, },
   ],
 })
-export class AppModule {}
+export class AppModule { }
