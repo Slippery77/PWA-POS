@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import compression from 'compression';
 import helmet from 'helmet';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -32,6 +33,18 @@ async function bootstrap() {
     credentials: true,
   });
   app.enableShutdownHooks(); // ปิด connection pool ให้เรียบร้อยตอน restart
+
+  // Swagger อธิบาย API สำหรับ dev/test
+  const swaggerConfig = new DocumentBuilder() // สร้าง config ของ swagger
+    .setTitle('PWA-POS API')
+    .setDescription('API documentation for PWA-POS')
+    .setVersion('0.1')
+    .addBearerAuth() // ต้องมี jwt ถึงจะเรียก API ได้
+    .build(); // ปิดการทำงาน และสร้าง document ของ swagger
+  // argument ตัวที่ 1 คือ path /api/doc/ , argument ตัวที่ 2 คือ path ของ swagger, argument ตัวที่ 3 คือ document ที่สร้างจาก config 
+  SwaggerModule.setup('api/docs',app ,SwaggerModule.createDocument(app,swaggerConfig));
   await app.listen(config.get<number>('PORT') ?? 3000);
+
+  
 }
 bootstrap();

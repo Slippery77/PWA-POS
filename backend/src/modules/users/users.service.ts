@@ -15,7 +15,7 @@ export class UsersService {
         tenantID: string,
         username: string,
        
-    ){return this.usersRepository.findUsernameAndTenantID(tenantID,username);}
+    ){return this.usersRepository.findUsernameAndTenantID(tenantID,username)};
 
     async createOwner(
         tenant_id:string,
