@@ -23,8 +23,7 @@ export class TablesRepository {
         capacity, 
         floor, 
         status, 
-        is_active,
-        created_at,
+        created_at, 
         updated_at
       FROM dining_tables
       ORDER BY floor ASC,
@@ -45,8 +44,7 @@ export class TablesRepository {
         capacity, 
         floor, 
         status, 
-        is_active,
-        created_at,
+        created_at, 
         updated_at
       FROM dining_tables
       WHERE table_id = $1;`
