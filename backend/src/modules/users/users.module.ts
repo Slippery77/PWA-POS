@@ -10,6 +10,4 @@ import { RolesModule } from '../roles/roles.module';
     providers:[UsersService, UsersRepository],
     exports:[UsersService]
 })
-
 export class UsersModule {}
-

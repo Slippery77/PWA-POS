@@ -182,4 +182,51 @@ export class MenuService {
             data:result.map(toMenuItemModifierGroupResponse)
         }
     }
+
+    async getFullMenu(){
+        const categories = await this.menuRepository.listActiveCategories();
+        const menuItem = await this.menuRepository.listActiveMenuItems();
+        const modifierGroup = await this.menuRepository.listActiveModifierGroups();
+        const itemModifier = await this.menuRepository.listActiveModifiers();
+        const linkMenuModifier = await this.menuRepository.listAllItemGroupLinks();
+
+        const groupIdsByItem = new Map<string,string[]>();
+        for (const i of linkMenuModifier){
+            const list = groupIdsByItem.get(i.menu_item_id)?? []; 
+            list.push(i.modifier_group_id)
+            groupIdsByItem.set(i.menu_item_id, list);
+        }
+
+        const itemsByCategory = new Map<string,any[]>();
+        for( const i of menuItem){
+            const list = itemsByCategory.get(i.category_id)??[];
+            list.push({...toMenuItemResponse(i),modifier_group_ids:groupIdsByItem.get(i.menu_item_id)??[]})
+            itemsByCategory.set(i.category_id, list);
+        }
+
+        const modifierByGroup = new Map<string, any[]>();
+        for (const i of itemModifier){
+            const list = modifierByGroup.get(i.modifier_group_id)??[];
+            list.push(toItemModifierResponse(i))
+            modifierByGroup.set(i.modifier_group_id,list);
+        }
+        const alldata = [...categories, ...menuItem, ...modifierGroup, ...itemModifier];
+        const version = alldata.reduce<Date|null>(
+            (max,r) => ( max===null || r.updated_at > max ? r.updated_at:max),null
+        );
+        return {
+            status: 'success',
+            data: {
+                version,
+                categories: categories.map(c => ({
+                    ...toCategoryResponse(c),
+                    items: itemsByCategory.get(c.category_id) ?? [],
+                })),
+                modifier_groups: modifierGroup.map(g => ({
+                    ...toModifierGroupResponse(g),
+                    modifiers: modifierByGroup.get(g.modifier_group_id)??[],
+                })),
+            },
+        };       
+    }
 }

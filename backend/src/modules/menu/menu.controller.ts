@@ -2,7 +2,7 @@ import { Controller, Body, Param, Post, Patch, ParseUUIDPipe, Get, Put } from '@
 import { MenuService } from './menu.service';
 import { CategoryDTO } from './dto/category.dto';
 import { AnyAuthenticated, RequirePermissions } from '../auth/guards/permissions.decorator';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiOkResponse, ApiNotFoundResponse, ApiConflictResponse, ApiCreatedResponse, ApiBadRequestResponse,ApiForbiddenResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiOkResponse, ApiNotFoundResponse, ApiConflictResponse, ApiCreatedResponse, ApiBadRequestResponse,ApiForbiddenResponse,ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { MenuItemDTO } from './dto/menu.dto';
 import { UpdateMenuItemDTO } from './dto/update_menuItem.dto';
 import { ModifierGroupDTO } from './dto/modifier-group.dto';
@@ -169,5 +169,69 @@ export class MenuController {
     @Put('items/:menu_item_id/modifier-groups')
     async replaceMenuItemModifierGroups(@Param('menu_item_id', ParseUUIDPipe) menuItemId:string , @Body() dto:ReplaceMenuItemModifierGroupsDTO){
         return this.menuService.replaceMenuItemModifierGroups(menuItemId,dto);
+    }
+
+    @ApiOperation({
+        summary: 'ดึงเมนูทั้งร้านในก้อนเดียว สำหรับ offline cache',
+        description: [
+            'คืนหมวดหมู่ เมนู กลุ่มตัวเลือก และตัวเลือก ที่ยังเปิดใช้งาน (is_active) ทั้งหมด',
+            '',
+            '- เมนูที่หมดวันนี้ (is_available = false) **ยังถูกส่งมา** ให้หน้า POS แสดงเป็นสีเทา',
+            '- เมนูในหมวดที่ถูกปิด ไม่ถูกส่งมา',
+            '- กลุ่มตัวเลือกแยกไว้ที่ `modifier_groups` เมนูอ้างด้วย `modifier_group_ids` (เรียงตามลำดับแสดงผล)',
+            '- `version` = updated_at ล่าสุดของเมนูทั้งร้าน ถ้าไม่ตรงกับที่ cache ไว้ให้โหลดใหม่',
+            '- ร้านที่ยังไม่มีเมนู ได้ array ว่าง และ `version: null`',
+        ].join('\n'),
+    })
+    @ApiOkResponse({
+        description: 'สำเร็จ',
+        schema: {
+            example: {
+                status: 'success',
+                data: {
+                    version: '2026-10-08T01:00:00.000Z',
+                    categories: [
+                        {
+                            category_id: 'a3f1c8e2-4b7d-4e91-8c2a-1f5e9d3b7a60',
+                            name: 'จานเดียว',
+                            sort_order: 0,
+                            items: [
+                                {
+                                    menu_item_id: 'b4e2d9f1-7c3a-4d8e-9b1f-2a6c8e4d0f71',
+                                    category_id: 'a3f1c8e2-4b7d-4e91-8c2a-1f5e9d3b7a60',
+                                    name: 'ผัดกะเพราหมู',
+                                    description: 'ไข่ดาวแยก',
+                                    price: 60,
+                                    is_available: true,
+                                    modifier_group_ids: ['c5d3e0a2-8d4b-4e9f-a02c-3b7d9f5e1a82'],
+                                },
+                            ],
+                        },
+                    ],
+                    modifier_groups: [
+                        {
+                            modifier_group_id: 'c5d3e0a2-8d4b-4e9f-a02c-3b7d9f5e1a82',
+                            name: 'ระดับความเผ็ด',
+                            selection_type: 'single',
+                            is_required: true,
+                            modifiers: [
+                                {
+                                    modifier_id: 'd6e4f1b3-9e5c-4fa0-b13d-4c8e0a6f2b93',
+                                    modifier_group_id: 'c5d3e0a2-8d4b-4e9f-a02c-3b7d9f5e1a82',
+                                    name: 'เผ็ดน้อย',
+                                    price_delta: 0,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            },
+        },
+    })
+    @ApiUnauthorizedResponse({ description: 'ไม่มี token หรือ token หมดอายุ' })
+    @AnyAuthenticated()
+    @Get('full')
+    async getFullMenu(){
+        return this.menuService.getFullMenu();
     }
 }

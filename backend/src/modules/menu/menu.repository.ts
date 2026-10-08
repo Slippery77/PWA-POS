@@ -161,8 +161,7 @@ export class MenuRepository{
         const sql = `
             INSERT INTO menu_item_modifier_groups(tenant_id, menu_item_id , modifier_group_id,sort_order)
             SELECT app_tenant_id(), $1, g.id, g.ord-1 
-            FROM unnest($2::uuid[]) WITH ORDINALITY AS g(id, ord)
-;
+            FROM unnest($2::uuid[]) WITH ORDINALITY AS g(id, ord);
         `;
         await this.db.query(sql,[menuItemId,modifierGroupId]);
     }
@@ -178,4 +177,61 @@ export class MenuRepository{
         const result = await this.db.query(sql,[menuItemId]);
         return result.rows;
     } 
+
+    async listActiveCategories(){
+        const sql =`
+            SELECT category_id ,name,sort_order,updated_at
+            FROM categories
+            WHERE is_active 
+            ORDER BY sort_order, name;
+        `;
+        const result = await this.db.query(sql)
+        return result.rows;
+    }
+    
+    async listActiveMenuItems() {
+        const sql =`
+            SELECT m.category_id,m.menu_item_id, m.name, m.description, m.price, m.is_available, m.updated_at
+            FROM menu_items m
+            JOIN categories c on c.category_id = m.category_id
+            WHERE m.is_active and c.is_active
+            ORDER BY m.name 
+        `;
+        const result = await this.db.query(sql)
+        return result.rows;
+    }
+
+    async listActiveModifierGroups() {
+        const sql = `
+            SELECT modifier_group_id, name, selection_type, is_required, updated_at
+            FROM modifier_groups
+            WHERE is_active
+            ORDER BY name
+        `;
+        const result = await this.db.query(sql);
+        return result.rows;
+    }
+
+    async listActiveModifiers() {
+        const sql = `
+            SELECT m.modifier_id, m.modifier_group_id, m.name, m.price_delta, m.updated_at
+            FROM modifiers m
+            JOIN modifier_groups g ON g.modifier_group_id = m.modifier_group_id
+            WHERE m.is_active AND g.is_active
+            ORDER BY m.name
+        `;
+        const result = await this.db.query(sql);
+        return result.rows;
+    }
+
+    async listAllItemGroupLinks() {
+        const sql=`
+            SELECT l.modifier_group_id, l.menu_item_id
+            FROM menu_item_modifier_groups l
+            JOIN modifier_groups g on g.modifier_group_id = l.modifier_group_id and g.is_active
+            ORDER BY l.menu_item_id ,l.sort_order
+        `;
+    const result = await this.db.query(sql);
+    return result.rows;
+    }
 }
