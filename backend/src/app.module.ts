@@ -11,6 +11,7 @@ import { TenantContextInterceptor } from './common/interceptors/tenant-context.i
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { TablesModule } from './modules/tables/tables.module';
+import { KdsModule } from './modules/kds/kds.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -38,6 +39,7 @@ import * as Joi from 'joi';
     RegistersModule,
     MenuModule,
     TablesModule,
+    KdsModule,
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 100,
