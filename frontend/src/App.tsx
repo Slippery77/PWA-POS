@@ -1,16 +1,13 @@
-import { AppRouter }from './routes/AppRouter.tsx';
-import './App.css'
-import { KDSProvider } from './features/auth/context/KDSContext'
-
+import { AppRouter } from './routes/AppRouter';
+import { KDSProvider } from './features/auth/context/KDSContext';
+import './App.css';
 
 function App() {
   return (
-    <>
-      <KDSProvider>
-        <AppRouter />
-      </KDSProvider>
-    </>
-  )
+    <KDSProvider>
+      <AppRouter />
+    </KDSProvider>
+  );
 }
 
-export default App
+export default App;

@@ -61,27 +61,4 @@ export class AuthService {
             }
         );
     }
-    // async signInWithEmail(dto: LoginEmailDto) {
-    //     // TO DO : 
-    //     const user = await this.userService.findByEmailAndTenantID(dto.email, dto.password);
-    //     if(!user){
-    //         throw new UnauthorizedException('Invalid Credentials');
-    //     }    
-    //     const passwordValid = await bcrypt.compare(dto.password, user.password_hash);
-    //     if(!passwordValid){
-    //         throw new UnauthorizedException('Invalid password');
-    //     }
-    //     const payload = {sub: user.users_id, email: user.email, tenantID: user.tenant_id, role: user.role_id};
-    //     console.log(payload);
-    //     const accessToken = await this.jwtService.signAsync(payload);
-    //     return{
-    //         accessToken,
-    //         user:{
-    //             id: user.users_id,
-    //             email: user.email,
-    //             role: user.role_id,
-    //             tenantID: user.tenant_id,
-    //         }
-    //     }
-    // }
 }
