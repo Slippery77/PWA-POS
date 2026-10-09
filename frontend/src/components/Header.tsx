@@ -1,7 +1,7 @@
 import { Menu, UtensilsCrossed, ChefHat, ShoppingBag, LogOut, X } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
-import { useKDS } from "../context/KDSContext"
+import { useKDS } from "../features/kds/context/KDSContext"
 
 export interface Employee {
     name: string

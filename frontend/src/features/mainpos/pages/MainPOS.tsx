@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import Header from "../components/Header"
+import Header from "../../../components/Header" 
 import { useState } from "react"
 import MenuCard from "../components/MenuCard"
 import MenuSidebar from "../components/MenuSidebar"
@@ -7,7 +7,7 @@ import OrderSidebar from "../components/OrderSidebar"
 import ModifierPopup from "../components/ModifierPopup"
 import SearchBar from "../components/SearchBar"
 import { ArrowLeft, Search, ChevronDown, ChefHat, CheckCircle2, X } from "lucide-react"
-import { useKDS } from "../context/KDSContext"
+import { useKDS } from "../../kds/context/KDSContext"
 import { useNavigate } from "react-router-dom"
 
 export interface ModifierOption {

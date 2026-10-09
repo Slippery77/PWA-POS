@@ -9,6 +9,7 @@ import { ItemModifierDTO } from './dto/modifier_items.dto';
 import { ReplaceMenuItemModifierGroupsDTO } from './dto/replaceMenuItemModifierGroups.dto';
 import { SetAvailabilityMenuDTO } from './dto/setAvailabilityMenu.dto';
 import { UpdateModifierGroupDTO } from './dto/update_modifier_group.dto';
+import { UpdateModifierItemDTO } from './dto/update_modifierItem.dto';
 
 @Injectable()
 export class MenuService {
@@ -202,7 +203,45 @@ export class MenuService {
             throw err;
         }
     }
+
+    async updateItemModifier(modifier_id:string,dto:UpdateModifierItemDTO){
+        const fields = Object.keys(dto).filter(k => dto[k as keyof UpdateModifierItemDTO] !== undefined);
+        if(fields.length===0){
+            throw new BadRequestException('ข้อมูลที่ส่งมาว่าง');
+        }
+        let result;
+        try{
+            result = await this.menuRepository.updateItemModifier(modifier_id,dto,fields);
+        }catch (err: any) {
+            if (err.code === '23505') throw new ConflictException(`มีตัวเลือกชื่อ "${dto.name}" อยู่แล้ว`);
+            throw err;
+        }
+        if (!result) throw new NotFoundException('ไม่พบตัวเลือกนี้');
+        return{
+            status:'success',
+            data:toItemModifierResponse(result)
+        };
+    }
     
+    async setItemModifierActive(modifierId:string,is_active:boolean){
+        let result;
+        try{
+            result = await this.menuRepository.setItemModifierActive(modifierId,is_active);
+        }catch(err:any){
+            if(err.code==='23505'){
+                throw new ConflictException('มีตัวเลือกชื่อเดียวกันที่เปิดใช้อยู่ ให้เปลี่ยนชื่อตัวใดตัวหนึ่งก่อนเปิด');
+            }
+            throw err;
+        }
+        if (!result){
+            throw new NotFoundException ('ไม่พบตัวเลือกนี้')
+        }
+        return{
+            status:'success',
+            data:toItemModifierResponse(result)
+        }
+    }
+
     async replaceMenuItemModifierGroups(menuItemId:string,dto:ReplaceMenuItemModifierGroupsDTO){
         const item = await this.menuRepository.touchMenuItem(menuItemId);
         if(!item){

@@ -10,7 +10,7 @@ import { ItemModifierDTO } from './dto/modifier_items.dto';
 import { ReplaceMenuItemModifierGroupsDTO } from './dto/replaceMenuItemModifierGroups.dto';
 import { SetAvailabilityMenuDTO } from './dto/setAvailabilityMenu.dto';
 import { UpdateModifierGroupDTO } from './dto/update_modifier_group.dto'; 
-
+import { UpdateModifierItemDTO } from './dto/update_modifierItem.dto';
 
 @ApiBearerAuth()
 @ApiTags('Menu')
@@ -207,6 +207,45 @@ export class MenuController {
     }
 
     @ApiOperation({
+        summary: 'แก้ไขตัวเลือก',
+        description: 'ส่งเฉพาะ field ที่ต้องการแก้ (name, price_delta) · ย้ายกลุ่มไม่ได้ · แก้ตัวเลือกที่ปิดอยู่ได้ · บิลเก่าไม่เปลี่ยนเพราะเก็บ snapshot ไว้แล้ว',
+    })
+    @ApiParam({ name: 'modifier_id', format: 'uuid' })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiBadRequestResponse({ description: 'body ว่าง, ชนิดข้อมูลผิด, price_delta ติดลบ หรือส่ง field ที่ไม่อนุญาต เช่น modifier_group_id' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiNotFoundResponse({ description: 'ไม่พบตัวเลือก หรือเป็นของร้านอื่น' })
+    @ApiConflictResponse({ description: 'มีตัวเลือกชื่อนี้ที่เปิดใช้อยู่แล้ว' })
+    @RequirePermissions('menu:edit')
+    @Patch('modifiers/:modifier_id')
+    async updateModifierItem(@Param('modifier_id',ParseUUIDPipe) modifierId:string,@Body() dto:UpdateModifierItemDTO){
+        return this.menuService.updateItemModifier(modifierId,dto);
+    }
+
+    @ApiOperation({summary: 'เปิดการใช้งานตัวเลือก',description: 'ถ้ากลุ่มของตัวเลือกนี้ปิดอยู่ ตัวเลือกจะยังไม่ขึ้นใน /menu/full จนกว่าจะเปิดกลุ่ม',})
+    @ApiParam({ name: 'modifier_id', format: 'uuid' })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiNotFoundResponse({ description: 'ไม่พบตัวเลือก หรือเป็นของร้านอื่น' })
+    @ApiConflictResponse({ description: 'มีตัวเลือกอื่นชื่อเดียวกันเปิดใช้อยู่ ต้องเปลี่ยนชื่อก่อน' })
+    @RequirePermissions('menu:edit')
+    @Patch('modifiers/:modifier_id/enable')
+    async enableModifierItem(@Param('modifier_id',ParseUUIDPipe) modifierId:string){
+        return this.menuService.setItemModifierActive(modifierId,true);
+    }
+
+    @ApiOperation({ summary: 'ปิดการใช้งานตัวเลือก', description: 'ตัวเลือกจะหายจาก /menu/full แต่ยังเห็นใน /menu/admin' })
+    @ApiParam({ name: 'modifier_id', format: 'uuid' })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiNotFoundResponse({ description: 'ไม่พบตัวเลือก หรือเป็นของร้านอื่น' })
+    @RequirePermissions('menu:edit')
+    @Patch('modifiers/:modifier_id/disable')
+    async disableModifierItem(@Param('modifier_id',ParseUUIDPipe) modifierId:string){
+        return this.menuService.setItemModifierActive(modifierId,false);
+    }
+
+    @ApiOperation({
     summary: 'กำหนดกลุ่มตัวเลือกของเมนู',
     description: 'ส่งรายการกลุ่มทั้งชุด ลำดับใน array คือลำดับที่แสดง · ส่ง [] เพื่อถอดออกทั้งหมด',
     })
@@ -220,6 +259,8 @@ export class MenuController {
     async replaceMenuItemModifierGroups(@Param('menu_item_id', ParseUUIDPipe) menuItemId:string , @Body() dto:ReplaceMenuItemModifierGroupsDTO){
         return this.menuService.replaceMenuItemModifierGroups(menuItemId,dto);
     }
+
+
     @ApiOperation({
         summary: 'ตั้งสถานะเมนูหมดวันนี้ / กลับมาขายได้',
         description: [
@@ -326,7 +367,20 @@ export class MenuController {
         return this.menuService.getFullMenu();
     }
 
-
+    @ApiOperation({
+        summary: 'ดึงเมนูทั้งร้านสำหรับหน้าจัดการเมนู',
+        description: [
+            'โครงเหมือน /menu/full แต่รวมของที่ปิดไปแล้วด้วย',
+            '',
+            '- ทุกแถวมี `is_active` ใช้ทำสีเทาและเลือกปุ่ม enable/disable',
+            '- เมนูในหมวดที่ปิดยังถูกส่งมา อยู่ใต้หมวดนั้น',
+            '- `modifier_group_ids` รวมกลุ่มที่ปิดด้วย',
+            '- ไม่มี `version` เพราะหน้านี้ไม่ได้ cache',
+        ].join('\n'),
+    })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiUnauthorizedResponse({ description: 'ไม่มี token หรือ token หมดอายุ' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
     @RequirePermissions('menu:edit')
     @Get('admin')
     async adminMenu(){

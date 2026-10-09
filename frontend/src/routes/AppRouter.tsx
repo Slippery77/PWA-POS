@@ -1,8 +1,8 @@
 import { Route, Routes } from 'react-router-dom';
 import { LoginPage } from '../features/auth/pages/login_pages';
 import Register_page from '../features/registerOwner/pages/register_pages';
-import MainPOS from '../features/auth/pages/MainPOS';
-import KDSPage from '../features/auth/pages/KDSPage';
+import MainPOS from '../features/mainpos/pages/MainPOS';
+import KDSPage from '../features/kds/pages/KDSPage';
 import { MenuEdit } from '../features/editMenu/pages/menu_edit';
 
 export function AppRouter() {

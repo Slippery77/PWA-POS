@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DbContextService } from '../../database/db-context.service';
 import { UpdateMenuItemDTO } from './dto/update_menuItem.dto';
 import { UpdateModifierGroupDTO } from './dto/update_modifier_group.dto';
+import { UpdateModifierItemDTO } from './dto/update_modifierItem.dto';
 
 const CATEGORY_COLS = `category_id, name, sort_order, is_active, created_at, updated_at`;
 const MENU_ITEM_COLS = `menu_item_id, category_id, name, description, price, is_available, is_active, created_at, updated_at`;
@@ -9,7 +10,7 @@ const MODIFIER_GROUP_COLS = `modifier_group_id, name, selection_type, is_require
 const MODIFIER_COLS = `modifier_id, modifier_group_id, name, price_delta, is_active, created_at, updated_at`;
 const UPDATABLE = ['name', 'price', 'description', 'category_id'];
 const MODIFIER_GROUP_UPDATABLE = ['name', 'selection_type', 'is_required'] as const;
-
+const MODIFIER_ITEM_UPDATABLE = ['name','price_delta'] as const ;
 
 @Injectable()
 export class MenuRepository{
@@ -107,6 +108,7 @@ export class MenuRepository{
         return result.rows[0]??null;
     }
 
+    //ส่วนกลุ่มตัวเลือก
     async createModifierGroup(name:string,selectionType:string,isRequired:boolean){
         const sql = `
             INSERT INTO modifier_groups(tenant_id,name,selection_type,is_required)
@@ -149,6 +151,7 @@ export class MenuRepository{
         return result.rows[0]??null;
     }   
 
+    // ส่วนตัวเลือก
     async createModifierItem(modifierGroupId:string,name:string,priceDelta:number){
         const sql = `
             INSERT INTO modifiers(tenant_id,modifier_group_id,name,price_delta)
@@ -167,6 +170,38 @@ export class MenuRepository{
             RETURNING ${MENU_ITEM_COLS}
         `;
         const result = await this.db.query(sql,[menuItemId,isAvailable]);
+        return result.rows[0]??null;
+    }
+    
+    async setItemModifierActive(modifierId:string,is_active:boolean){
+        const sql =`
+            UPDATE modifiers
+            SET is_active = $2, updated_at = now()
+            WHERE modifier_id = $1
+            RETURNING ${MODIFIER_COLS}
+        `;
+        const result = await this.db.query(sql,[modifierId,is_active]);
+        return result.rows[0] ?? null;
+    }
+
+    async updateItemModifier(modifierId:string, dto:UpdateModifierItemDTO , fields:string[]){
+        const sets: string[] = [];
+        const params: any[] = [modifierId];
+
+        for (const f of fields) {
+            if (!MODIFIER_ITEM_UPDATABLE.includes(f as any)) continue;  // whitelist กัน SQL injection ผ่านชื่อคอลัมน์
+            params.push(dto[f as keyof UpdateModifierItemDTO]);
+            sets.push(`${f} = $${params.length}`);
+        }
+        sets.push('updated_at = now()');
+
+        const sql = `
+            UPDATE modifiers
+            SET ${sets.join(', ')}
+            WHERE modifier_id = $1
+            RETURNING ${MODIFIER_COLS}
+        `;
+        const result =await this.db.query(sql,params);
         return result.rows[0]??null;
     }
 
