@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DbContextService } from '../../database/db-context.service';
 import { UpdateMenuItemDTO } from './dto/update_menuItem.dto';
+import { UpdateModifierGroupDTO } from './dto/update_modifier_group.dto';
 
 const CATEGORY_COLS = `category_id, name, sort_order, is_active, created_at, updated_at`;
 const MENU_ITEM_COLS = `menu_item_id, category_id, name, description, price, is_available, is_active, created_at, updated_at`;
 const MODIFIER_GROUP_COLS = `modifier_group_id, name, selection_type, is_required,is_active,created_at,updated_at`;
 const MODIFIER_COLS = `modifier_id, modifier_group_id, name, price_delta, is_active, created_at, updated_at`;
 const UPDATABLE = ['name', 'price', 'description', 'category_id'];
+const MODIFIER_GROUP_UPDATABLE = ['name', 'selection_type', 'is_required'] as const;
+
 
 @Injectable()
 export class MenuRepository{
@@ -26,20 +29,10 @@ export class MenuRepository{
         return result.rows[0];
     }
 
-    async findCategoryById(category_id:string){
-        const sql =`
-            SELECT *
-            FROM categories
-            WHERE category_id = $1;
-        `;
-        const result = await this.db.query(sql,[category_id]);
-        return result.rows[0]??null;
-    }
-
     async setCategoryActive(category_id:string,is_active:boolean){
         const sql = `
             UPDATE categories
-            SET is_active = $2
+            SET is_active = $2, updated_at=now()
             WHERE category_id = $1
             RETURNING ${CATEGORY_COLS};
         `;
@@ -50,18 +43,18 @@ export class MenuRepository{
     async renameCategory(category_id:string,name:string){
         const sql =`
             UPDATE categories
-            SET name= $2
+            SET name= $2, updated_at = now()
             WHERE category_id = $1
             RETURNING ${CATEGORY_COLS}
         `;
         const result = await this.db.query(sql,[category_id,name]);
-        return result.rows[0];
+        return result.rows[0]??null;  
     }
     
     async listCategories(){
         const sql = `
             SELECT ${CATEGORY_COLS}
-            FROM categories
+            FROM categories 
             ORDER BY sort_order,name
         `;
         const result = await this.db.query(sql);
@@ -80,7 +73,7 @@ export class MenuRepository{
     async setMenuItemsActive(menu_id:string, isActive:boolean){
         const sql = `
             UPDATE menu_items
-            SET is_active = $2
+            SET is_active = $2, updated_at=now()
             WHERE menu_item_id =$1
             RETURNING ${MENU_ITEM_COLS};
         `;
@@ -107,7 +100,7 @@ export class MenuRepository{
         const sql = `
         UPDATE menu_items
         SET ${sets.join(', ')}, updated_at = now()
-        WHERE menu_item_id = $1 and is_active
+        WHERE menu_item_id = $1
         RETURNING ${MENU_ITEM_COLS}
         `
         const result = await this.db.query(sql,params);
@@ -124,6 +117,38 @@ export class MenuRepository{
         return result.rows[0]
     }
 
+    async updateModifierGroup(groupId: string, dto: UpdateModifierGroupDTO, fields: string[]) {
+        const sets: string[] = [];
+        const params: any[] = [groupId];
+
+        for (const f of fields) {
+            if (!MODIFIER_GROUP_UPDATABLE.includes(f as any)) continue;  // whitelist กัน SQL injection ผ่านชื่อคอลัมน์
+            params.push(dto[f as keyof UpdateModifierGroupDTO]);
+            sets.push(`${f} = $${params.length}`);
+        }
+        sets.push('updated_at = now()');
+
+        const sql = `
+            UPDATE modifier_groups
+            SET ${sets.join(', ')}
+            WHERE modifier_group_id = $1
+            RETURNING ${MODIFIER_GROUP_COLS}
+        `;
+        const result = await this.db.query(sql, params);
+        return result.rows[0] ?? null;
+    }
+
+    async setModifierGroupActive(groupId: string, isActive: boolean) {
+        const sql = `
+            UPDATE modifier_groups
+            SET is_active = $2, updated_at = now()
+            WHERE modifier_group_id = $1
+            RETURNING ${MODIFIER_GROUP_COLS}
+        `;
+        const result = await this.db.query(sql,[groupId,isActive]);
+        return result.rows[0]??null;
+    }   
+
     async createModifierItem(modifierGroupId:string,name:string,priceDelta:number){
         const sql = `
             INSERT INTO modifiers(tenant_id,modifier_group_id,name,price_delta)
@@ -134,7 +159,18 @@ export class MenuRepository{
         return result.rows[0]
     }
 
-    // 
+    async setMenuItemAvailability(menuItemId: string, isAvailable: boolean){
+        const sql =`
+            UPDATE menu_items
+            SET is_available = $2, updated_at = now()
+            WHERE menu_item_id = $1 AND is_active
+            RETURNING ${MENU_ITEM_COLS}
+        `;
+        const result = await this.db.query(sql,[menuItemId,isAvailable]);
+        return result.rows[0]??null;
+    }
+
+    //จัดการผูกข้อมูล modifier และ modifier_group
     async touchMenuItem(menuItemId:string){
         const sql = `
             UPDATE menu_items
@@ -177,61 +213,77 @@ export class MenuRepository{
         const result = await this.db.query(sql,[menuItemId]);
         return result.rows;
     } 
-
-    async listActiveCategories(){
-        const sql =`
-            SELECT category_id ,name,sort_order,updated_at
-            FROM categories
-            WHERE is_active 
-            ORDER BY sort_order, name;
-        `;
-        const result = await this.db.query(sql)
-        return result.rows;
-    }
     
-    async listActiveMenuItems() {
-        const sql =`
-            SELECT m.category_id,m.menu_item_id, m.name, m.description, m.price, m.is_available, m.updated_at
+    //ส่วนดึงข้อมูล
+    //เอาไว้ดึงข้อมูลใน endpoint get /full และ /admin
+    async listCategoriesForMenu(includeInactive: boolean) {
+        const where = includeInactive ? '' : 'WHERE is_active';
+        const sql = `
+            SELECT category_id, name, sort_order, is_active, updated_at
+            FROM categories
+            ${where}
+            ORDER BY sort_order, name
+        `;
+        return (await this.db.query(sql)).rows;
+    }
+
+    async listMenuItemsForMenu(includeInactive: boolean) {
+        const where = includeInactive ? '' : 'WHERE m.is_active AND c.is_active';
+        const sql = `
+            SELECT m.category_id, m.menu_item_id, m.name, m.description, m.price,
+                m.is_available, m.is_active, m.updated_at
             FROM menu_items m
-            JOIN categories c on c.category_id = m.category_id
-            WHERE m.is_active and c.is_active
-            ORDER BY m.name 
-        `;
-        const result = await this.db.query(sql)
-        return result.rows;
-    }
-
-    async listActiveModifierGroups() {
-        const sql = `
-            SELECT modifier_group_id, name, selection_type, is_required, updated_at
-            FROM modifier_groups
-            WHERE is_active
-            ORDER BY name
-        `;
-        const result = await this.db.query(sql);
-        return result.rows;
-    }
-
-    async listActiveModifiers() {
-        const sql = `
-            SELECT m.modifier_id, m.modifier_group_id, m.name, m.price_delta, m.updated_at
-            FROM modifiers m
-            JOIN modifier_groups g ON g.modifier_group_id = m.modifier_group_id
-            WHERE m.is_active AND g.is_active
+            JOIN categories c ON c.category_id = m.category_id
+            ${where}
             ORDER BY m.name
         `;
-        const result = await this.db.query(sql);
-        return result.rows;
+        return (await this.db.query(sql)).rows;
     }
 
-    async listAllItemGroupLinks() {
-        const sql=`
+    async listModifierGroupsForMenu(includeInactive: boolean) {
+        const where = includeInactive ? '' : 'WHERE is_active';
+        const sql = `
+            SELECT modifier_group_id, name, selection_type, is_required, is_active, updated_at
+            FROM modifier_groups
+            ${where}
+            ORDER BY name
+        `;
+        return (await this.db.query(sql)).rows;
+    }
+
+    async listModifiersForMenu(includeInactive: boolean) {
+        const where = includeInactive ? '' : 'WHERE m.is_active AND g.is_active';
+        const sql = `
+            SELECT m.modifier_id, m.modifier_group_id, m.name, m.price_delta, m.is_active, m.updated_at
+            FROM modifiers m
+            JOIN modifier_groups g ON g.modifier_group_id = m.modifier_group_id
+            ${where}
+            ORDER BY m.name
+        `;
+        return (await this.db.query(sql)).rows;
+    }
+
+    async listItemGroupLinksForMenu(includeInactive: boolean) {
+        // เงื่อนไขอยู่ใน JOIN ON จึงใช้ AND ไม่ใช่ WHERE
+        const activeOnly = includeInactive ? '' : 'AND g.is_active';
+        const sql = `
             SELECT l.modifier_group_id, l.menu_item_id
             FROM menu_item_modifier_groups l
-            JOIN modifier_groups g on g.modifier_group_id = l.modifier_group_id and g.is_active
-            ORDER BY l.menu_item_id ,l.sort_order
+            JOIN modifier_groups g ON g.modifier_group_id = l.modifier_group_id ${activeOnly}
+            ORDER BY l.menu_item_id, l.sort_order
         `;
-    const result = await this.db.query(sql);
-    return result.rows;
+        return (await this.db.query(sql)).rows;
+    }
+
+    async getMenuVersion(){
+        const sql = `
+            SELECT GREATEST(
+                (SELECT max(updated_at) FROM categories),
+                (SELECT max(updated_at) FROM menu_items),
+                (SELECT max(updated_at) FROM modifier_groups),
+                (SELECT max(updated_at) FROM modifiers)
+            ) AS version
+        `;
+        return (await this.db.query(sql)).rows[0].version;
     }
 }

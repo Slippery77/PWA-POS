@@ -8,6 +8,9 @@ import { UpdateMenuItemDTO } from './dto/update_menuItem.dto';
 import { ModifierGroupDTO } from './dto/modifier-group.dto';
 import { ItemModifierDTO } from './dto/modifier_items.dto';
 import { ReplaceMenuItemModifierGroupsDTO } from './dto/replaceMenuItemModifierGroups.dto';
+import { SetAvailabilityMenuDTO } from './dto/setAvailabilityMenu.dto';
+import { UpdateModifierGroupDTO } from './dto/update_modifier_group.dto'; 
+
 
 @ApiBearerAuth()
 @ApiTags('Menu')
@@ -52,7 +55,7 @@ export class MenuController {
     @ApiResponse({status:400, description:'ข้อมูลไม่ถูกต้อง' })
     @ApiResponse({status:403, description:'ไม่มีสิทธิ์ในการแก้ไขหมวดหมู่เมนู'})
     @ApiResponse({status:404, description:'ไม่พบหมวดหมู่เมนูที่ระบุ'})
-    @ApiResponse({status:409, description:'หมวดหมู่เมนูถูกเปิดการใช้งานอยู่แล้ว'})
+    @ApiResponse({status:409, description:'มีหมวดหมู่อื่นชื่อเดียวกันเปิดใช้อยู่ ต้องเปลี่ยนชื่อก่อน'})
     @RequirePermissions('menu:edit')
     @Patch('category/:category_id/enable')
     async enableCategory(@Param('category_id', ParseUUIDPipe) categoryId:string){
@@ -60,7 +63,7 @@ export class MenuController {
     }
 
     @ApiOperation({
-        summary:'เปลี่ยนชื่อหมวดหมู',
+        summary:'เปลี่ยนชื่อหมวดหมู่',
         description:'เปลี่ยนชื่อหมวดหมู่',
     })
     @ApiResponse({status: 200,description: 'เปลี่ยนชื่อหมวดหมู่เรียบร้อยแล้ว'})
@@ -96,7 +99,7 @@ export class MenuController {
     @ApiOperation({ summary: 'กลับมาขายเมนูอีกครั้ง' })
     @ApiOkResponse({ description: 'เปิดขายเมนูเรียบร้อยแล้ว' })
     @ApiNotFoundResponse({ description: 'ไม่พบเมนูที่ระบุ' })
-    @ApiConflictResponse({ description: 'มีเมนูชื่อนี้ขายอยู่แล้ว' })
+    @ApiConflictResponse({ description: 'มีเมนูอื่นชื่อเดียวกันขายอยู่ ต้องเปลี่ยนชื่อก่อน' })
     @RequirePermissions('menu:edit')
     @Patch('items/:menu_item_id/enable')
     async enableMenuItem(@Param('menu_item_id', ParseUUIDPipe) menuItemId: string) {
@@ -142,6 +145,53 @@ export class MenuController {
         return this.menuService.createModifierGroup(dto);
     }
 
+    @ApiOperation({ summary: 'แก้ไขกลุ่มตัวเลือก', description: 'ส่งเฉพาะ field ที่ต้องการแก้ ชื่อห้ามซ้ำกับกลุ่มอื่นที่เปิดใช้อยู่ (ไม่สนตัวพิมพ์เล็กใหญ่)' })
+    @ApiParam({ name: 'modifier_group_id', format: 'uuid' })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiBadRequestResponse({ description: 'body ว่าง, selection_type ไม่ใช่ single/multi หรือส่ง null' })
+    @ApiUnauthorizedResponse({ description: 'ไม่มี token' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiNotFoundResponse({ description: 'ไม่พบกลุ่ม หรือเป็นของร้านอื่น' })
+    @ApiConflictResponse({ description: 'มีกลุ่มชื่อนี้ที่เปิดใช้อยู่แล้ว' })
+    @RequirePermissions('menu:edit')
+    @Patch('modifier-groups/:modifier_group_id')
+    async updateModifierGroup(@Param('modifier_group_id', ParseUUIDPipe) groupId: string,@Body() dto: UpdateModifierGroupDTO) {
+        return this.menuService.updateModifierGroup(groupId,dto) 
+    }
+
+    @ApiOperation({
+    summary: 'ปิดการใช้งานกลุ่มตัวเลือก',
+    description: 'เมนูที่ผูกกลุ่มนี้ไว้จะไม่เห็นกลุ่มนี้ใน /menu/full แต่การผูกยังอยู่ เปิดกลับแล้วจะกลับมาเหมือนเดิมโดยไม่ต้องผูกใหม่',
+    })
+    @ApiParam({ name: 'modifier_group_id', format: 'uuid' })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiBadRequestResponse({ description: 'id ไม่ใช่ uuid' })
+    @ApiUnauthorizedResponse({ description: 'ไม่มี token' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiNotFoundResponse({ description: 'ไม่พบกลุ่ม หรือเป็นของร้านอื่น' })
+    @RequirePermissions('menu:edit')
+    @Patch('modifier-groups/:modifier_group_id/disable')
+    async disableModifierGroup(@Param('modifier_group_id', ParseUUIDPipe) groupId:string) {
+        return this.menuService.setModifierGroupActive(groupId, false);
+    }
+
+    @ApiOperation({
+    summary: 'เปิดการใช้งานกลุ่มตัวเลือก',
+    description: 'เมนูที่เคยผูกกลุ่มนี้ไว้จะเห็นกลุ่มนี้ใน /menu/full อีกครั้งโดยไม่ต้องผูกใหม่ ถ้ามีกลุ่มอื่นชื่อเดียวกันเปิดอยู่จะได้ 409',
+    })
+    @ApiParam({ name: 'modifier_group_id', format: 'uuid' })
+    @ApiOkResponse({ description: 'สำเร็จ' })
+    @ApiBadRequestResponse({ description: 'id ไม่ใช่ uuid' })
+    @ApiUnauthorizedResponse({ description: 'ไม่มี token' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiConflictResponse({ description: 'มีกลุ่มอื่นชื่อเดียวกันเปิดใช้อยู่ ต้องเปลี่ยนชื่อกลุ่มใดกลุ่มหนึ่งก่อน' })
+    @ApiNotFoundResponse({ description: 'ไม่พบกลุ่ม หรือเป็นของร้านอื่น' })
+    @RequirePermissions('menu:edit')
+    @Patch('modifier-groups/:modifier_group_id/enable')
+    async enableModifierGroup(@Param('modifier_group_id', ParseUUIDPipe) groupId:string) {
+         return this.menuService.setModifierGroupActive(groupId, true);
+    }
+
     @ApiOperation({
         summary: 'สร้างตัวเลือกในกลุ่ม',
         description: 'เช่น เผ็ดน้อย หรือ ไข่ดาว +10 บาท · price_delta เป็น 0 ได้สำหรับตัวเลือกที่ไม่คิดเงิน',
@@ -169,6 +219,47 @@ export class MenuController {
     @Put('items/:menu_item_id/modifier-groups')
     async replaceMenuItemModifierGroups(@Param('menu_item_id', ParseUUIDPipe) menuItemId:string , @Body() dto:ReplaceMenuItemModifierGroupsDTO){
         return this.menuService.replaceMenuItemModifierGroups(menuItemId,dto);
+    }
+    @ApiOperation({
+        summary: 'ตั้งสถานะเมนูหมดวันนี้ / กลับมาขายได้',
+        description: [
+            'ใช้เมื่อวัตถุดิบหมดระหว่างวัน (MENU-03) ต่างจาก disable ที่เป็นการเลิกขายถาวร',
+            '',
+            '- เมนูที่ `is_available = false` ยังแสดงในหน้า POS แต่ฐานข้อมูลปฏิเสธการสั่ง (MENU-05)',
+            '- ไม่ reset อัตโนมัติเมื่อขึ้นวันใหม่ ต้องกดเปิดกลับเอง',
+            '- เมนูที่เลิกขายแล้ว (is_active = false) แก้ไม่ได้ ได้ 404',
+        ].join('\n'),
+    })
+    @ApiParam({ name: 'menu_item_id', format: 'uuid', example: 'b4e2d9f1-7c3a-4d8e-9b1f-2a6c8e4d0f71' })
+    @ApiOkResponse({
+        description: 'สำเร็จ คืนข้อมูลเมนูหลังแก้',
+        schema: {
+            example: {
+                status: 'success',
+                data: {
+                    menu_item_id: 'b4e2d9f1-7c3a-4d8e-9b1f-2a6c8e4d0f71',
+                    category_id: 'a3f1c8e2-4b7d-4e91-8c2a-1f5e9d3b7a60',
+                    name: 'ผัดกะเพราหมู',
+                    description: null,
+                    price: 60,
+                    is_available: false,
+                    is_active: true,
+                    created_at: '2026-10-01T03:00:00.000Z',
+                    updated_at: '2026-10-09T12:30:00.000Z',
+                },
+            },
+        },
+    })
+    @ApiBadRequestResponse({ description: 'menu_item_id ไม่ใช่ uuid หรือ is_available ไม่ใช่ boolean / ไม่ได้ส่งมา' })
+    @ApiUnauthorizedResponse({ description: 'ไม่มี token หรือ token หมดอายุ' })
+    @ApiForbiddenResponse({ description: 'ไม่มีสิทธิ์ menu:edit' })
+    @ApiNotFoundResponse({ description: 'ไม่พบเมนู เลิกขายไปแล้ว หรือเป็นของร้านอื่น' })
+    @RequirePermissions('menu:edit')
+    // TODO: MENU-03 ให้พนักงานครัวกดหมดเองได้ — เปลี่ยนเป็น 'menu:toggle_availability'
+    // ต้องเพิ่ม permission ใน seed และ user-roles-permissions.md ก่อน
+    @Patch('items/:menu_item_id/availability')
+    async setMenuItemAvailability(@Param('menu_item_id',ParseUUIDPipe) menuItemId:string , @Body() dto:SetAvailabilityMenuDTO){
+        return this.menuService.setMenuItemAvailability(menuItemId,dto);
     }
 
     @ApiOperation({
@@ -233,5 +324,12 @@ export class MenuController {
     @Get('full')
     async getFullMenu(){
         return this.menuService.getFullMenu();
+    }
+
+
+    @RequirePermissions('menu:edit')
+    @Get('admin')
+    async adminMenu(){
+        return this.menuService.getAdminMenu();
     }
 }

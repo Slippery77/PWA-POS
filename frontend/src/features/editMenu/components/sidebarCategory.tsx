@@ -7,7 +7,7 @@ export default function SidebarCategory(){
         <div>
             <aside className='flex h-full w-40 flex-col border-r border-[#d9c6b0] bg-[#f3eadf]'>
                 <ul className='flex-1 overflow-y-auto'>
-                    
+
                 </ul>
 
                 <div className="shrink-0 broder-t border-[#d9c7b0] p-2">
