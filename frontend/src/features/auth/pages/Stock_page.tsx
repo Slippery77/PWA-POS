@@ -273,15 +273,6 @@ export default function StockPage() {
                     </div>
                 </div>
             </main>
-
-            {/* ปุ่มช่วยเหลือมุมล่างขวา */}
-            <button
-                type="button"
-                className="fixed bottom-6 right-6 w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center text-stone-500 hover:text-stone-700 text-xs font-medium transition-all cursor-pointer"
-                title="ช่วยเหลือ"
-            >
-                ?
-            </button>
         </div>
     )
 }
