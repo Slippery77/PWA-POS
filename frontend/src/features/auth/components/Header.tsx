@@ -1,4 +1,13 @@
-import { Menu, UtensilsCrossed, ChefHat, ShoppingBag, LogOut, X } from "lucide-react"
+import { 
+Menu, 
+UtensilsCrossed, 
+ChefHat, 
+LogOut, 
+X,
+Package,
+ChartLine,
+Wallet,
+Settings} from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
 import { useKDS } from "../context/KDSContext"
@@ -18,6 +27,10 @@ export default function Header() {
 
     const isKDS = location.pathname.includes("/kds")
     const isPOS = location.pathname.includes("/mainpos")
+    const isSetting = location.pathname.includes("/setting")
+    const isSiftwork = location.pathname.includes("/siftwork")
+    const isSalereport = location.pathname.includes("/sale-report")
+    const isStock = location.pathname.includes("/stock")
     const pendingOrdersCount = orders.filter((o) => o.status === "รอทำ").length
 
     // ปิดเมนูเมื่อคลิกข้างนอก
@@ -51,7 +64,12 @@ export default function Header() {
                 <span className="text-stone-300 font-light">/</span>
 
                 <span className="text-sm font-medium text-[#8C6D58]">
-                    {isKDS ? "KDS" : isPOS ? "POS" : "ระบบ"}
+                    {isKDS && ("KDS")}
+                    {isPOS && ("POS")}
+                    {isStock && ("สต็อก")}
+                    {isSalereport && ("ยอดขาย")}
+                    {isSetting && ("ตั้งค่า")}
+                    {isSiftwork && ("ปิดกะ/นับเงิน")}
                 </span>
             </div>
 
@@ -96,8 +114,8 @@ export default function Header() {
                                     isPOS ? "font-semibold text-[#8C6D58] bg-[#FAF7F2]/80" : "text-[#2D241E]"
                                 }`}
                             >
-                                <ShoppingBag className="w-4 h-4 text-[#8C6D58]" />
-                                <span>หน้าขาย (POS)</span>
+                                <UtensilsCrossed className="w-4 h-4 text-[#8C6D58]" />
+                                <span>POS</span>
                             </Link>
 
                             <Link
@@ -109,7 +127,7 @@ export default function Header() {
                             >
                                 <div className="flex items-center gap-3">
                                     <ChefHat className="w-4 h-4 text-[#8C6D58]" />
-                                    <span>จอครัว (KDS)</span>
+                                    <span>KDS</span>
                                 </div>
                                 {pendingOrdersCount > 0 && (
                                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#C27803] text-white">
@@ -117,6 +135,51 @@ export default function Header() {
                                     </span>
                                 )}
                             </Link>
+
+                            <Link
+                                to="/stock"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all hover:bg-[#FAF7F2] ${
+                                    isStock ? "font-semibold text-[#8C6D58] bg-[#FAF7F2]/80" : "text-[#2D241E]"
+                                }`}
+                            >
+                                <Package className="w-4 h-4 text-[#8C6D58]" />
+                                <span>สต็อก</span>
+                            </Link>
+
+                            <Link
+                                to="/sale-report"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all hover:bg-[#FAF7F2] ${
+                                    isSalereport ? "font-semibold text-[#8C6D58] bg-[#FAF7F2]/80" : "text-[#2D241E]"
+                                }`}
+                            >
+                                <ChartLine className="w-4 h-4 text-[#8C6D58]" />
+                                <span>ยอดขาย</span>
+                            </Link>
+
+                            <Link
+                                to="/siftwork"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all hover:bg-[#FAF7F2] ${
+                                    isSiftwork ? "font-semibold text-[#8C6D58] bg-[#FAF7F2]/80" : "text-[#2D241E]"
+                                }`}
+                            >
+                                <Wallet className="w-4 h-4 text-[#8C6D58]" />
+                                <span>ปิดกะ/นับเงิน</span>
+                            </Link>
+
+                            <Link
+                                to="/setting"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all hover:bg-[#FAF7F2] ${
+                                    isSetting ? "font-semibold text-[#8C6D58] bg-[#FAF7F2]/80" : "text-[#2D241E]"
+                                }`}
+                            >
+                                <Settings className="w-4 h-4 text-[#8C6D58]" />
+                                <span>ตั้งค่า</span>
+                            </Link>
+                            
 
                             <div className="border-t border-stone-100 my-1" />
 

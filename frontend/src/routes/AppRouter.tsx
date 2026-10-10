@@ -3,6 +3,10 @@ import { LoginPage } from '../features/auth/pages/login_pages';
 import Register_page from '../features/registerOwner/pages/register_pages';
 import MainPOS from '../features/auth/pages/MainPOS';
 import KDSPage from '../features/auth/pages/KDSPage';
+import SettingPage from '../features/auth/pages/Setting_page';
+import SiftworkPage from '../features/auth/pages/Siftwork_page';
+import StockPage from '../features/auth/pages/Stock_page';
+import SaleReportPage from '../features/auth/pages/Sale_report_page';
 
 export function AppRouter() {
     return (
@@ -15,6 +19,10 @@ export function AppRouter() {
             <Route path='/:tenantSlug/mainpos' element={<MainPOS />} />
             <Route path='/kds' element={<KDSPage />} />
             <Route path='/:tenantSlug/kds' element={<KDSPage />} />
+            <Route path='/setting' element={<SettingPage />} />
+            <Route path='/siftwork' element={<SiftworkPage />} />
+            <Route path='/stock' element={<StockPage />} />
+            <Route path='/sale-report' element={<SaleReportPage />} />
         </Routes>
     );
 }
